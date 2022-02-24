@@ -5,17 +5,27 @@ const app = new Koa();
 const router = new KoaRouter();
 const path = require('path');
 const render = require('koa-ejs');
-
+const bodyParser = require('koa-bodyparser');
 
 const things = ['My Family', 'Programming', 'Music'];
 
 //Json Prettier Middleware
 app.use(json());
 
+//BodyParser Middleware
+
+app.use(bodyParser());
+
+//Add Aditional Properties to context
+app.context.user = 'Farzad';
+
+
+
 //Simple Middleware Example
 //app.use(async ctx => ctx.body = { msg: 'Hello World' });
 
-router.get('/test', ctx => (ctx.body = 'Hello Test'));
+router.get('/test', ctx => (ctx.body = `Hello ${ctx.user}`));
+router.get('/test/:name', ctx => (ctx.body = `Hello ${ctx.params.name}`));
 
 render(app, {
     root: path.join(__dirname, 'views'),
@@ -25,13 +35,32 @@ render(app, {
     debug: false
 });
 
-//Index 
-router.get('/', async ctx => {
+//Routes
+router.get('/', index);
+router.get('/add', showAdd);
+router.post('/add', add);
+
+//List of Things
+async function index(ctx) {
     await ctx.render('index', {
         title: 'Things I Love:',
         things: things
     });
-});
+}
+
+//Show Add Page
+
+async function showAdd(ctx) {
+    await ctx.render('add');
+}
+
+//Add Thing
+
+async function add(ctx) {
+    const body = ctx.request.body;
+    things.push(body.thing);
+    ctx.redirect('/');
+}
 
 
 //Router Middleware
